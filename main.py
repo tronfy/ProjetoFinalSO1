@@ -2,16 +2,15 @@ import sys
 import os
 from random import randint
 from threading import Thread
-from time import sleep
 
 from Encomenda import Encomenda
-from Monitoramento import log, monitorar
+from monitoramento import log, monitorar
 from Ponto import Ponto
 from Veiculo import Veiculo
 
 
 if len(sys.argv) < 5:
-    print("use: main.py S C P A")
+    print("use: main.py <S> <C> <P> <A>")
     sys.exit(1)
 
 S = int(sys.argv[1])

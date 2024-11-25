@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from threading import Semaphore, Thread
+from threading import Thread
 from random import randint
 from time import sleep
 
 from typing import TYPE_CHECKING
 
-from Monitoramento import log
+from monitoramento import log
 
 if TYPE_CHECKING:
     from Encomenda import Encomenda
@@ -24,7 +24,6 @@ class Ponto:
         self.fila_encomendas = fila_encomendas
         self.lista_global_veiculos = lista_global_veiculos
         self.lista_encomendas_recebidas: list[Encomenda] = []
-        # self.semaforo = Semaphore(1)
 
         self.fim = False
         self.veiculo_atual: int = None
@@ -54,22 +53,13 @@ class Ponto:
                 encomenda.carregar(veiculo.id)
 
         self.veiculo_atual = None
+        veiculo.liberar()
 
     def loop(self):
         while not self.fim:
-            # coletar veículos da lista global em uma fila de atendimento
-            fila_veiculos = []
+            # atender veículos que estão nesse ponto e finalizaram a viagem
             for veiculo in self.lista_global_veiculos:
                 if veiculo.id_ponto_atual == self.id and not veiculo.em_transito:
-                    fila_veiculos.append(veiculo)
-            for veiculo in fila_veiculos:
-                self.lista_global_veiculos.remove(veiculo)
-
-            # atender cada veículo da fila
-            for veiculo in fila_veiculos:
-                self.atender_veiculo(veiculo)
-                # libera e devolve veículo para a lista global
-                veiculo.liberar()
-                self.lista_global_veiculos.append(veiculo)
+                    self.atender_veiculo(veiculo)
 
         log("ponto {} FINALIZADO".format(self.id))

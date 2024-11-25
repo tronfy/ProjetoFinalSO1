@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from threading import Thread, Semaphore
 
-from Monitoramento import log
+from monitoramento import log
 from util import format_time
 
 
@@ -47,3 +47,5 @@ class Encomenda:
                     format_time(self.horario_destino.timestamp()),
                 )
             )
+        
+        # log("encomenda {} FINALIZADA".format(self.id))

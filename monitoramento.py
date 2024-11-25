@@ -1,7 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
-from threading import Thread
 
 from util import format_time
 
@@ -18,7 +17,12 @@ logs: list[str] = []
 
 
 def log(msg: str):
-    logs.append("[{}] {}".format(format_time(datetime.now().timestamp()), msg))
+    str = "[{}] {}".format(format_time(datetime.now().timestamp()), msg)
+
+    logs.append(str)
+
+    with open("out.log", 'a') as f:
+        f.write(str + '\n')
 
 
 def monitorar(
@@ -35,17 +39,17 @@ def monitorar(
                 for v in veiculos
                 if v.id_ponto_atual == ponto.id and v.thread.is_alive()
             ]
-            buf += "ponto {}; recebidas:[{}]; a_enviar:[{}]; sendo_atendido:{}; fila:{};\n".format(
+            buf += "ponto {};  recebidas:[ {} ];  a_enviar:[ {} ];  sendo_atendido: {};  fila:[ {} ];\n".format(
                 ponto.id,
-                " ".join([str(e.id) for e in ponto.lista_encomendas_recebidas]),
-                " ".join([str(e.id) for e in ponto.fila_encomendas]),
-                ponto.veiculo_atual,
-                fila_veiculos,
+                " ".join([str(e.id) for e in ponto.lista_encomendas_recebidas]).ljust(22),
+                " ".join([str(e.id) for e in ponto.fila_encomendas]).ljust(16),
+                str(ponto.veiculo_atual).ljust(4),
+                " ".join(str(id) for id in fila_veiculos).ljust(8)
             )
 
         # exibir ultimos logs
         buf += "\nLOGS:\n"
-        buf += "\n".join(logs[-10:])
+        buf += "\n".join(logs[-15:])
 
         print(CLEAR + buf, flush=True)
 
