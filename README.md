@@ -16,10 +16,10 @@ Este projeto se trata de uma aplicação concorrente que simula o comportamento 
 
 ## Conteúdo
 
-- [Detalhes](##Detalhes)
-- [Instalação](##Instalação)
-- [Uso](##Uso)
-- [Créditos](##Créditos)
+- [Detalhes](#detalhes)
+- [Instalação](#instalação)
+- [Uso](#uso)
+- [Créditos](#créditos)
 
 ## Detalhes
 
