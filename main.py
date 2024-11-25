@@ -1,20 +1,35 @@
+import sys
+import os
 from random import randint
 from threading import Thread
 from time import sleep
 
 from Encomenda import Encomenda
+from Monitoramento import log, monitorar
 from Ponto import Ponto
 from Veiculo import Veiculo
 
 
-S = 5
-C = 3
-P = 10
-A = 5
+if len(sys.argv) < 5:
+    print("use: main.py S C P A")
+    sys.exit(1)
+
+S = int(sys.argv[1])
+C = int(sys.argv[2])
+P = int(sys.argv[3])
+A = int(sys.argv[4])
+
+if P <= A or A <= C:
+    print("argumentos violam regra: P >> A >> C")
+    sys.exit(1)
 
 encomendas: list[Encomenda] = []
 pontos: list[Ponto] = []
 veiculos: list[Veiculo] = []
+
+
+if not os.path.exists("encomendas"):
+    os.makedirs("encomendas")
 
 # criar encomendas
 for i in range(P):
@@ -37,53 +52,32 @@ for i in range(S):
     pontos.append(Ponto(i, encomendas_ponto, veiculos))
 
 # iniciar threads
+monitoramento = Thread(target=monitorar, args=(pontos, veiculos, encomendas))
+monitoramento.start()
+
 for veiculo in veiculos:
     veiculo.thread.start()
 for ponto in pontos:
     ponto.thread.start()
-# for encomenda in encomendas:
-#     encomenda.thread.start()
+for encomenda in encomendas:
+    encomenda.thread.start()
 
+# encomendas finalizam suas threads quando são entregues
+for encomenda in encomendas:
+    encomenda.thread.join()
 
-# def verifica_fim():
-#     while True:
-#         end = True
+log("TODAS as ENCOMENDAS foram entregues")
 
-#         for ponto in pontos:
-#             if len(ponto.fila_encomendas) > 0:
-#                 end = False
-#                 break
-
-#         for veiculo in veiculos:
-#             if len(veiculo.encomendas) > 0:
-#                 end = False
-#                 break
-
-#         if end:
-#             # mata todas as threads e encerra o programa
-#             for veiculo in veiculos:
-#                 veiculo.thread._stop()
-#             for ponto in pontos:
-#                 ponto.thread._stop()
-#             # for encomenda in encomendas:
-#             #     encomenda.thread._stop()
-
-#         sleep(1)
-
-
-# fim_thread = Thread(target=verifica_fim)
-# fim_thread.start()
-# fim_thread.join()
-
-
-# join threads
+# veículos finalizam suas threads quando derem uma volta completa sem coletar ou entregar encomendas
 for veiculo in veiculos:
     veiculo.thread.join()
-for ponto in pontos:
-    ponto.thread.join()
-# for encomenda in encomendas:
-#     encomenda.thread.join()
 
-# loop que checa por condição de parada:
-# todo ponto.fila_encomendas vazia
-# todo veiculo.encomendas vazia
+log("TODOS os VEÍCULOS deram uma volta completa sem coletar ou entregar encomendas")
+
+for ponto in pontos:
+    ponto.finalizar()
+    # ponto.thread.join()
+
+log("TODOS os PONTOS foram finalizados")
+
+monitoramento.join()

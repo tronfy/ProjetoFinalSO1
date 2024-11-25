@@ -2,7 +2,10 @@ from __future__ import annotations
 
 
 from datetime import datetime
-from threading import Thread
+from threading import Thread, Semaphore
+
+from Monitoramento import log
+from util import format_time
 
 
 class Encomenda:
@@ -15,39 +18,32 @@ class Encomenda:
         self.horario_destino: datetime = None
         self.id_veiculo: int = None
 
-        self.thread = Thread(target=self.loop)
-
-        print(
-            "encomenda {} criada em {} de {} para {}".format(
-                self.id,
-                self.horario_origem,
-                self.id_ponto_origem,
-                self.id_ponto_destino,
-            ),
-            flush=True,
-        )
+        self.thread = Thread(target=self.main)
+        self.semaforo = Semaphore(0)
 
     def carregar(self, id_veiculo: int):
+        log("encomenda {} CARREGADA por veículo {}".format(self.id, id_veiculo))
         self.id_veiculo = id_veiculo
         self.horario_carregamento = datetime.now()
 
-        print(
-            "encomenda {} carregada por {} às {}".format(
-                self.id, self.id_veiculo, self.horario_carregamento
-            ),
-            flush=True,
-        )
-
     def entregar(self):
+        self.semaforo.release()
+
+    def main(self):
+        self.semaforo.acquire()
+
+        # gerar arquivo de rastro
         self.horario_destino = datetime.now()
-
-        print(
-            "encomenda {} entregue por {} às {}".format(
-                self.id, self.id_veiculo, self.horario_destino
-            ),
-            flush=True,
-        )
-
-    def loop(self):
-        while True:
-            pass
+        log("encomenda {} ENTREGUE em ponto {}".format(self.id, self.id_ponto_destino))
+        with open("encomendas/{}.txt".format(self.id), "w") as f:
+            f.write(
+                "encomenda {}\norigem: {} ({})\ncoletada por: veículo {} ({})\nentregue em: {} ({})".format(
+                    self.id,
+                    self.id_ponto_origem,
+                    format_time(self.horario_origem.timestamp()),
+                    self.id_veiculo,
+                    format_time(self.horario_carregamento.timestamp()),
+                    self.id_ponto_destino,
+                    format_time(self.horario_destino.timestamp()),
+                )
+            )

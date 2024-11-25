@@ -1,15 +1,15 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
+from Monitoramento import log
+
+if TYPE_CHECKING:
+    from Encomenda import Encomenda
 
 from random import randint
 from datetime import datetime
 from time import sleep
 from threading import Lock, Thread
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from Encomenda import Encomenda
 
 
 class Veiculo:
@@ -22,6 +22,7 @@ class Veiculo:
 
         self.lock = Lock()
         self.em_transito = False
+        self.visitas_sem_encomenda = 0
 
         self.thread = Thread(target=self.loop)
 
@@ -41,10 +42,6 @@ class Veiculo:
         return descarregando
 
     def carrega_encomenda(self, encomenda: Encomenda):
-        print(
-            "veiculo {} carregando encomenda {}".format(self.id, encomenda.id),
-            flush=True,
-        )
         self.encomendas.append(encomenda)
 
     def liberar(self):
@@ -52,23 +49,19 @@ class Veiculo:
         self.lock.release()
 
     def loop(self):
-        while True:
+        while self.visitas_sem_encomenda < self.S:
             # travar o veículo
             self.em_transito = False
             self.lock.acquire()
 
             # espera o tempo aleatório
-            tempo = randint(1, 1)
-            print(
-                "veiculo {} esperando {} segundos".format(self.id, tempo),
-                flush=True,
-            )
-            sleep(tempo)
+            sleep(randint(1, 3))
 
             # incrementa o ponto
             self.id_ponto_atual = (self.id_ponto_atual + 1) % self.S
-            print(
-                "veiculo {} indo para ponto {}".format(self.id, self.id_ponto_atual),
-                flush=True,
+            log(
+                "veículo {} VIAJANDO para ponto {}".format(self.id, self.id_ponto_atual)
             )
             pass
+
+        log("veículo {} FINALIZADO".format(self.id))
